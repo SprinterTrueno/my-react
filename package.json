@@ -1,0 +1,26 @@
+{
+  "name": "my-react",
+  "version": "1.0.0",
+  "description": "从零实现 React 18",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint --ext .js,.ts,.jsx,.tsx --fix --quiet ./packages",
+    "prepare": "husky"
+  },
+  "packageManager": "pnpm@10.11.1",
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@typescript-eslint/eslint-plugin": "^8.33.1",
+    "@typescript-eslint/parser": "^8.33.1",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.4.1",
+    "husky": "^9.1.7",
+    "prettier": "^3.5.3",
+    "rollup": "^4.42.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
