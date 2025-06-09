@@ -1,11 +1,45 @@
-import { FiberNode } from "./fiber";
+import { createWorkInProgress, FiberNode, FiberRootNode } from "./fiber";
 import { beginWork } from "./beginWork";
 import { completeWork } from "./completeWork";
+import { HostRoot } from "./workTags";
 
 // 指向当前正在处理的 Fiber 节点。
 let workInProgress: FiberNode | null = null;
 
-export const renderRoot = (root: FiberNode) => {
+/**
+ * 从任意 Fiber 节点触发更新，最终调用 renderRoot 启动渲染流程。
+ * @param fiber
+ */
+export const scheduleUpdateOnFiber = (fiber: FiberNode) => {
+  const root = markUpdateFromFiberToRoot(fiber);
+  renderRoot(root);
+};
+
+/**
+ * 从任意 Fiber 节点向上回溯，找到根 Fiber 节点。
+ * @param fiber
+ */
+const markUpdateFromFiberToRoot = (fiber: FiberNode) => {
+  let node = fiber;
+  let parent = node.return;
+
+  while (parent !== null) {
+    node = parent;
+    parent = node.return;
+  }
+
+  if (node.tag === HostRoot) {
+    return node.stateNode;
+  }
+
+  return null;
+};
+
+/**
+ * 从根节点开始协调流程，构建或更新 Fiber 树并最终提交到 DOM。
+ * @param root
+ */
+const renderRoot = (root: FiberRootNode) => {
   prepareFreshStack(root);
 
   do {
@@ -20,10 +54,10 @@ export const renderRoot = (root: FiberNode) => {
 
 /**
  * 初始化工作栈，将根节点设为当前工作节点。
- * @param fiber
+ * @param root
  */
-const prepareFreshStack = (fiber: FiberNode) => {
-  workInProgress = fiber;
+const prepareFreshStack = (root: FiberRootNode) => {
+  workInProgress = createWorkInProgress(root.current, {});
 };
 
 /**
@@ -40,7 +74,7 @@ const workLoop = () => {
  * @param fiber
  */
 const performUnitOfWork = (fiber: FiberNode) => {
-  // 获取下一个工作节点。
+  // TODO 获取下一个工作节点。
   const next = beginWork(fiber);
   // 更新当前工作节点。
   fiber.memoizedProps = fiber.pendingProps;
@@ -62,7 +96,7 @@ const completeUnitOfWork = (fiber: FiberNode) => {
   let node: FiberNode | null = fiber;
 
   do {
-    // 执行完成阶段逻辑
+    // TODO 执行完成阶段逻辑
     completeWork(fiber);
     // 检查是否有兄弟节点。
     const sibling = fiber.sibling;

@@ -1,4 +1,5 @@
 import { Props, Key, Ref } from "shared/ReactTypes";
+import { Container } from "hostConfig";
 import { WorkTag } from "./workTags";
 import { Flags, NoFlags } from "./fiberFlags";
 
@@ -41,8 +42,12 @@ export class FiberNode {
    * 如果当前节点是 workInProgress，则 alternate 指向 current 节点。
    */
   alternate: FiberNode | null;
-  // 标记需要对当前 Fiber 节点执行的操作
+  // 标记需要对当前 Fiber 节点执行的操作。
   flags: Flags;
+  // 存储组件的 状态更新队列（如 setState 调用产生的更新）。
+  updateQueue: unknown;
+  // 保存组件的当前状态（即最新已提交的状态）。
+  memoizedState: any;
 
   constructor(tag: WorkTag, pendingProps: Props, key: Key) {
     this.tag = tag;
@@ -58,5 +63,52 @@ export class FiberNode {
     this.memoizedProps = null;
     this.alternate = null;
     this.flags = NoFlags;
+    this.updateQueue = null;
+    this.memoizedState = null;
   }
 }
+
+export class FiberRootNode {
+  // 宿主容器（如 DOM 的 root 节点）。
+  container: Container;
+  // 指向当前已渲染的 Fiber 树（hostRootFiber）。
+  current: FiberNode;
+  // 指向已完成更新的 Fiber 树（hostRootFiber）。
+  finishedWork: FiberNode | null;
+
+  constructor(container: Container, hostRootFiber: FiberNode) {
+    this.container = container;
+    this.current = hostRootFiber;
+    hostRootFiber.stateNode = this;
+    this.finishedWork = null;
+  }
+}
+
+/**
+ * 创建 FiberRootNode
+ * @param current
+ * @param pendingProps
+ */
+export const createWorkInProgress = (
+  current: FiberNode,
+  pendingProps: Props
+): FiberNode => {
+  let workInProgress = current.alternate;
+
+  if (workInProgress === null) {
+    workInProgress = new FiberNode(current.tag, pendingProps, current.key);
+    workInProgress.stateNode = current.stateNode;
+    workInProgress.alternate = current;
+    current.alternate = workInProgress;
+  } else {
+    workInProgress.pendingProps = pendingProps;
+    workInProgress.flags = NoFlags;
+  }
+  workInProgress.type = current.type;
+  workInProgress.updateQueue = current.updateQueue;
+  workInProgress.child = current.child;
+  workInProgress.memoizedProps = current.memoizedProps;
+  workInProgress.memoizedState = current.memoizedState;
+
+  return workInProgress;
+};
